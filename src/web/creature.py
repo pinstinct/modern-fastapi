@@ -21,13 +21,16 @@ def get_one(name) -> Creature:
 def create(creature: Creature) -> Creature:
     return service.create(creature)
 
+
 @router.patch("/{name}")
 def modify(name, creature: Creature) -> Creature:
     return service.modify(name, creature)
 
+
 @router.patch("/{name}")
 def replace(name, creature: Creature) -> Creature:
     return service.replace(name, creature)
+
 
 @router.delete("/{name}")
 def delete(name: str):
