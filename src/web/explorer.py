@@ -1,5 +1,6 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
+from error import Missing, Duplicate
 from model.explorer import Explorer
 from service import explorer as service
 
@@ -12,26 +13,40 @@ def get_all() -> list[Explorer]:
 
 
 @router.get("/{name}")
-def get_one(name) -> Explorer | None:
-    return service.get_one(name)
+def get_one(name) -> Explorer:
+    try:
+        return service.get_one(name)
+    except Missing as exc:
+        raise HTTPException(status_code=404, detail=exc.msg)
 
 
-# 나머지 엔드포인트. 현재 아무 일도 하지 않는다.
-@router.post("")
+@router.post("", status_code=201)
 def create(explorer: Explorer) -> Explorer:
-    return service.create(explorer)
+    try:
+        return service.create(explorer)
+    except Duplicate as exc:
+        raise HTTPException(status_code=404, detail=exc.msg)
 
 
 @router.patch("/{name}")
 def modify(name, explorer: Explorer) -> Explorer:
-    return service.modify(name, explorer)
+    try:
+        return service.modify(name, explorer)
+    except Missing as exc:
+        raise HTTPException(status_code=404, detail=exc.msg)
 
 
-@router.patch("/{name}")
+@router.put("/{name}")
 def replace(name, explorer: Explorer) -> Explorer:
-    return service.replace(name, explorer)
+    try:
+        return service.replace(name, explorer)
+    except Missing as exc:
+        raise HTTPException(status_code=404, detail=exc.msg)
 
 
 @router.delete("/{name}")
 def delete(name: str):
-    return None
+    try:
+        return service.delete(name)
+    except Missing as exc:
+        raise HTTPException(status_code=404, detail=exc.msg)

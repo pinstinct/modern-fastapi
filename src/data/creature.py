@@ -1,4 +1,5 @@
-from data.init import curs
+from data.init import curs, IntegrityError
+from error import Missing, Duplicate
 from model.creature import Creature
 
 curs.execute(
@@ -36,7 +37,10 @@ def get_one(name: str) -> Creature:
     params = {"name": name}
     curs.execute(qry, params)
     row = curs.fetchone()
-    return row_to_model(row)
+    if row:
+        return row_to_model(row)
+    else:
+        raise Missing(msg=f"Creature {name} not found")
 
 
 def get_all() -> list[Creature]:
@@ -46,13 +50,19 @@ def get_all() -> list[Creature]:
     return [row_to_model(row) for row in rows]
 
 
-def create(creature: Creature):
+def create(creature: Creature) -> Creature:
+    if not creature:
+        return None
     qry = """insert into creature values (:name, :description, :country, :area, :aka)"""
     params = model_to_dict(creature)
-    curs.execute(qry, params)
+    try:
+        curs.execute(qry, params)
+    except IntegrityError:
+        raise Duplicate(msg=f"Creature {creature.name} already exists")
+    return get_one(creature.name)
 
 
-def modify(creature: Creature):
+def modify(name: str, creature: Creature) -> Creature:
     qry = """update creature
         set country = :country, 
             name = :name,
@@ -63,16 +73,22 @@ def modify(creature: Creature):
     """
     params = model_to_dict(creature)
     params["name_orig"] = creature.name
-    _ = curs.execute(qry, params)
-    return get_one(creature.name)
+    curs.execute(qry, params)
+    if curs.rowcount == 1:
+        return get_one(creature.name)
+    else:
+        raise Missing(msg=f"Creature {name} not found")
 
 
 def replace(creature: Creature):
     return creature
 
 
-def delete(creature: Creature):
+def delete(name: str):
+    if not name:
+        return False
     qry = "delete from creature where name = :name"
-    params = {"name": creature.name}
-    res = curs.execute(qry, params)
-    return bool(res)
+    params = {"name": name}
+    curs.execute(qry, params)
+    if curs.rowcount != 1:
+        raise Missing(msg=f"Creature {name} not found")
