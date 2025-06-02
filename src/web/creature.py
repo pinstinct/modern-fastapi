@@ -17,7 +17,7 @@ def get_one(name) -> Creature:
 
 
 # 나머지 엔드포인트. 현재는 아무 일도 하지 않는다.
-@router.post("/")
+@router.post("")
 def create(creature: Creature) -> Creature:
     return service.create(creature)
 
