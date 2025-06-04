@@ -5,7 +5,7 @@ class PublicUser(BaseModel):
     name: str
 
 
-class SignInUSer(PublicUser):
+class SignInUser(PublicUser):
     password: str
 
 
